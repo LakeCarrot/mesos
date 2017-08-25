@@ -94,7 +94,8 @@ public:
   // image and return the absolute path to the root filesystem.
   virtual process::Future<ProvisionInfo> provision(
       const ContainerID& containerId,
-      const Image& image) const;
+      const Image& image,
+      const Option<ContainerInfo::Backend> backend = None()) const;
 
   // Destroy a previously provisioned root filesystem. Assumes that
   // all references (e.g., mounts, open files) to the provisioned
@@ -128,7 +129,8 @@ public:
 
   process::Future<ProvisionInfo> provision(
       const ContainerID& containerId,
-      const Image& image);
+      const Image& imagem,
+      const Option<ContainerInfo::Backend> backend = None());
 
   process::Future<bool> destroy(const ContainerID& containerId);
 

@@ -2809,6 +2809,15 @@ message ContainerInfo {
     MESOS = 2;
   }
 
+  // Container backend types
+  enum Backend {
+    UNKNOWN = 0;
+    AUFS = 1;
+    OVERLAY = 2;
+    BIND = 3;
+    COPY = 4;
+  }
+
   message DockerInfo {
     // The docker image that is going to be passed to the registry.
     required string image = 1;
@@ -2874,6 +2883,9 @@ message ContainerInfo {
 
   // If specified a tty will be attached to the container entrypoint.
   optional TTYInfo tty_info = 10;
+
+  // Container backend types
+  optional Backend backend = 11;
 }
 
 

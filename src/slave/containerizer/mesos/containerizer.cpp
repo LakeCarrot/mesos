@@ -1183,7 +1183,8 @@ Future<bool> MesosContainerizerProcess::launch(
 
   container->provisioning = provisioner->provision(
       containerId,
-      containerConfig.container_info().mesos().image());
+      containerConfig.container_info().mesos().image(),
+      containerConfig.container_info().backend());
 
   return container->provisioning
     .then(defer(self(),

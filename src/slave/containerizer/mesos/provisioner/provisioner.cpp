@@ -291,13 +291,15 @@ Future<Nothing> Provisioner::recover(
 
 Future<ProvisionInfo> Provisioner::provision(
     const ContainerID& containerId,
-    const Image& image) const
+    const Image& image,
+    const Option<ContainerInfo::Backend> backend) const
 {
   return dispatch(
       CHECK_NOTNULL(process.get()),
       &ProvisionerProcess::provision,
       containerId,
-      image);
+      image,
+      backend);
 }
 
 
@@ -421,21 +423,46 @@ Future<Nothing> ProvisionerProcess::recover(
 
 Future<ProvisionInfo> ProvisionerProcess::provision(
     const ContainerID& containerId,
-    const Image& image)
+    const Image& image,
+    const Option<ContainerInfo::Backend> backend)
 {
   if (!stores.contains(image.type())) {
     return Failure(
         "Unsupported container image type: " +
         stringify(image.type()));
   }
+  string customizeBackend;
+  if (backend.isSome()) {
+    // determine the customize backend based on the container info
+    if (backend != ContainerInfo::UNKNOWN) {
+        if (backend == ContainerInfo::AUFS) {
+            customizeBackend = AUFS_BACKEND;
+        } else if (backend != ContainerInfo::OVERLAY) {
+            customizeBackend = OVERLAY_BACKEND;
+        } else if (backend != ContainerInfo::BIND) {
+            customizeBackend = BIND_BACKEND;
+        } else if (backend != ContainerInfo::COPY) {
+            customizeBackend = COPY_BACKEND;
+        } else {
+            customizeBackend = defaultBackend;
+        }
+        // validate the backend
+        Try<Nothing> supported = validateBackend(customizeBackend, rootDir);
+        if (supported.isError()) {
+            customizeBackend = defaultBackend;
+        }
+    }
 
+  } else {
+    customizeBackend = defaultBackend;
+  }
   // Get and then provision image layers from the store.
-  return stores.get(image.type()).get()->get(image, defaultBackend)
+  return stores.get(image.type()).get()->get(image, customizeBackend)
     .then(defer(self(),
                 &Self::_provision,
                 containerId,
                 image,
-                defaultBackend,
+                customizeBackend,
                 lambda::_1));
 }
 

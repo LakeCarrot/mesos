@@ -851,10 +851,12 @@ public:
   MOCK_CONST_METHOD1(recover,
                      Future<Nothing>(const hashset<ContainerID>&));
 
-  MOCK_CONST_METHOD2(provision,
+  MOCK_CONST_METHOD3(provision,
                      Future<mesos::internal::slave::ProvisionInfo>(
                          const ContainerID&,
-                         const Image&));
+                         const Image&,
+                         const Option<mesos::ContainerInfo::Backend>
+                         ));
 
   MOCK_CONST_METHOD1(destroy, Future<bool>(const ContainerID&));
 };
@@ -877,7 +879,7 @@ TEST_F(MesosContainerizerProvisionerTest, ProvisionFailed)
   Future<Nothing> provision;
 
   // Simulate a provision failure.
-  EXPECT_CALL(*provisioner, provision(_, _))
+  EXPECT_CALL(*provisioner, provision(_, _, _))
     .WillOnce(DoAll(FutureSatisfy(&provision),
                     Return(Failure("provision failure"))));
 
@@ -961,7 +963,7 @@ TEST_F(MesosContainerizerProvisionerTest, DestroyWhileProvisioning)
   Future<Nothing> provision;
   Promise<ProvisionInfo> promise;
 
-  EXPECT_CALL(*provisioner, provision(_, _))
+  EXPECT_CALL(*provisioner, provision(_, _, _))
     .WillOnce(DoAll(FutureSatisfy(&provision),
                     Return(promise.future())));
 
@@ -1047,7 +1049,7 @@ TEST_F(MesosContainerizerProvisionerTest, IsolatorCleanupBeforePrepare)
   Future<Nothing> provision;
   Promise<ProvisionInfo> promise;
 
-  EXPECT_CALL(*provisioner, provision(_, _))
+  EXPECT_CALL(*provisioner, provision(_, _, _))
     .WillOnce(DoAll(FutureSatisfy(&provision),
                     Return(promise.future())));
 
